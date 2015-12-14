@@ -87,11 +87,13 @@ class Extend_User_Profiles {
 	}
 	
 	public function add_custom_user_field() {
+		// Registration form
 		add_action( 'register_form', array( $this, 'register_form_phone') );
 		add_filter( 'registration_errors', array( $this, 'registration_errors_phone'), 10, 3 );
 		add_action( 'user_register', array( $this, 'user_register_phone') );
 		
-		add_action('show_user_profile', array( $this,'user_profile_phone' ));
+		// User profile page
+		add_filter( 'user_contactmethods' , array( $this, 'update_profile_phone' ));
 	}
 	
 	public function register_form_phone() {
@@ -122,20 +124,10 @@ class Extend_User_Profiles {
 		}
 	}
 	
-	public function user_profile_phone( $user ) {
-		?>
-		<table class="form-table">
-			<tr>
-				<th>
-					<label for="tc_phone"><?php _e('Phone Number'); ?></label>
-				</th>
-				<td>
-					<input type="tel" name="tc_phone" id="tc_phone" value="<?php echo esc_attr( get_the_author_meta( 'phone_number', $user->ID ) ); ?>" class="regular-text" />
-					<br><span class="description"><?php _e('Your 10-digit phone number.'); ?></span>
-				</td>
-			</tr>
-		</table>
-		<?php
+	public function update_profile_phone($profile_fields) {
+		$profile_fields['phone_number'] = 'Phone Number';
+
+		return $profile_fields;
 	}
 
 	/**
