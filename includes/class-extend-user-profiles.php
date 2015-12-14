@@ -81,7 +81,62 @@ class Extend_User_Profiles {
 		// Handle localisation
 		$this->load_plugin_textdomain();
 		add_action( 'init', array( $this, 'load_localisation' ), 0 );
-	} // End __construct ()
+		
+		// Add custom fields to user profile
+		$this->add_custom_user_field();
+	}
+	
+	public function add_custom_user_field() {
+		add_action( 'register_form', array( $this, 'register_form_phone') );
+		add_filter( 'registration_errors', array( $this, 'registration_errors_phone'), 10, 3 );
+		add_action( 'user_register', array( $this, 'user_register_phone') );
+		
+		add_action('show_user_profile', array( $this,'user_profile_phone' ));
+	}
+	
+	public function register_form_phone() {
+			$phone_number = ( ! empty( $_POST['phone_number'] ) ) ? trim( $_POST['phone_number'] ) : '';
+					
+			?>
+				<p>
+					<label for="phone_number"><?php _e( 'Phone Number' ) ?><br />
+					<input type="tel" name="phone_number" id="phone_number" class="input" value="<?php echo esc_attr( wp_unslash( $phone_number ) ); ?>" size="10" /></label>
+				</p>
+			<?php
+	}
+
+	public function registration_errors_phone( $errors, $sanitized_user_login, $user_email ) {	
+		if ( empty( $_POST['phone_number'] ) || ! empty( $_POST['phone_number'] ) && trim( $_POST['phone_number'] ) == '' ) {
+			$errors->add( 'phone_number_error', __( '<strong>ERROR</strong>: A valid phone number is required' ) );
+		}
+		if ( ! empty( $_POST['phone_number'] ) && strlen( $_POST['phone_number'] ) != 10 ) {
+			$errors->add( 'phone_number_error', __( '<strong>ERROR</strong>: The phone number isn\'t correct.' ) );
+		}
+
+		return $errors;
+	}
+
+	public function user_register_phone( $user_id ) {
+		if ( ! empty( $_POST['phone_number'] ) ) {
+			update_user_meta( $user_id, 'phone_number', trim( $_POST['phone_number'] ) );
+		}
+	}
+	
+	public function user_profile_phone( $user ) {
+		?>
+		<table class="form-table">
+			<tr>
+				<th>
+					<label for="tc_phone"><?php _e('Phone Number'); ?></label>
+				</th>
+				<td>
+					<input type="tel" name="tc_phone" id="tc_phone" value="<?php echo esc_attr( get_the_author_meta( 'phone_number', $user->ID ) ); ?>" class="regular-text" />
+					<br><span class="description"><?php _e('Your 10-digit phone number.'); ?></span>
+				</td>
+			</tr>
+		</table>
+		<?php
+	}
 
 	/**
 	 * Load plugin localisation
@@ -100,12 +155,12 @@ class Extend_User_Profiles {
 	 * @return  void
 	 */
 	public function load_plugin_textdomain () {
-	    $domain = 'extend-user-profiles';
+			$domain = 'extend-user-profiles';
 
-	    $locale = apply_filters( 'plugin_locale', get_locale(), $domain );
+			$locale = apply_filters( 'plugin_locale', get_locale(), $domain );
 
-	    load_textdomain( $domain, WP_LANG_DIR . '/' . $domain . '/' . $domain . '-' . $locale . '.mo' );
-	    load_plugin_textdomain( $domain, false, dirname( plugin_basename( $this->file ) ) . '/lang/' );
+			load_textdomain( $domain, WP_LANG_DIR . '/' . $domain . '/' . $domain . '-' . $locale . '.mo' );
+			load_plugin_textdomain( $domain, false, dirname( plugin_basename( $this->file ) ) . '/lang/' );
 	} // End load_plugin_textdomain ()
 
 	/**
